@@ -76,12 +76,12 @@ body {
   -webkit-tap-highlight-color: transparent;
   overflow: auto;
 }
-button { font: inherit; color: inherit; }
+button, input { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 .app {
   height: 100%;
-  min-height: 480px;
+  min-height: 500px;
   max-width: 640px;
   margin: 0 auto;
   padding: 10px max(14px, env(safe-area-inset-right, 0px)) 14px max(14px, env(safe-area-inset-left, 0px));
@@ -94,6 +94,7 @@ button { font: inherit; color: inherit; }
 
 /* Barre d’état */
 .status { grid-area: status; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.status-actions { display: flex; gap: 8px; flex: none; }
 .pill { display: inline-flex; align-items: center; gap: 8px; font-size: .95rem; font-weight: 500; color: var(--muted); min-width: 0; }
 .pill span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line); flex: none; }
@@ -113,7 +114,7 @@ button { font: inherit; color: inherit; }
 .speed-row { display: flex; align-items: baseline; gap: .35em; }
 .speed-value {
   font-family: var(--num); font-weight: 700;
-  font-size: min(36vw, 26vh, 15rem);
+  font-size: min(36vw, 24vh, 15rem);
   line-height: .82; letter-spacing: -.01em;
   font-variant-numeric: tabular-nums;
 }
@@ -124,30 +125,31 @@ button { font: inherit; color: inherit; }
   font-size: .95rem; line-height: 1.4; color: var(--muted);
 }
 .notice[data-tone="bad"] { color: var(--ink); }
-.notice button {
-  display: block; margin: 10px auto 0; padding: 10px 16px;
-  border: 1px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer; font-weight: 600;
-}
 
 /* Distance et compléments */
 .stats {
   grid-area: stats;
-  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 14px;
+  display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 14px;
   padding-top: 12px; border-top: 1px solid var(--line);
 }
 .label { font-size: .95rem; font-weight: 500; color: var(--muted); }
 .dist .label { display: block; margin-bottom: 2px; }
 .dist-value {
+  display: block;
   font-family: var(--num); font-weight: 600;
-  font-size: min(16vw, 11vh, 5.5rem); line-height: .9;
+  font-size: min(16vw, 10vh, 5.5rem); line-height: .9;
   font-variant-numeric: tabular-nums;
 }
-.dist-value small, .mini small { font-family: var(--text); font-size: 1rem; font-weight: 500; color: var(--muted); margin-left: .25em; letter-spacing: 0; }
-.mini { margin: 0; display: grid; gap: 4px; align-content: start; }
+.dist-value small, .mini small, .dist-sub small { font-family: var(--text); font-size: 1rem; font-weight: 500; color: var(--muted); margin-left: .25em; letter-spacing: 0; }
+.dist-sub { display: flex; align-items: baseline; gap: .4em; margin-top: 8px; font-size: .9rem; color: var(--muted); }
+.dist-sub b { font-family: var(--num); font-weight: 600; font-size: 1.6rem; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dist-sub small { margin-left: -.15em; font-size: .8rem; }
+.mini { margin: 0; display: grid; gap: 3px; align-content: start; }
 .mini div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .mini dt { font-size: .9rem; color: var(--muted); }
-.mini dd { margin: 0; font-family: var(--num); font-weight: 600; font-size: 1.6rem; line-height: 1.05; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mini dd { margin: 0; font-family: var(--num); font-weight: 600; font-size: 1.55rem; line-height: 1.05; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .mini small { font-size: .8rem; }
+.mini .dim dd { color: var(--muted); }
 
 /* Pente : le bloc de couleur */
 .slope {
@@ -156,7 +158,7 @@ button { font: inherit; color: inherit; }
   background: var(--slope-bg); color: var(--slope-ink);
   border-radius: 20px; padding: 14px 16px;
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(110px, 42%); align-items: center; gap: 16px;
-  min-height: 124px;
+  min-height: 118px;
   transition: background-color .4s ease, color .4s ease;
 }
 .slope[data-cat="c1"] { --slope-bg: #2F8F4E; --slope-ink: #FFFFFF; }
@@ -169,7 +171,7 @@ button { font: inherit; color: inherit; }
 .slope-label { font-size: .95rem; font-weight: 600; }
 .slope-value {
   display: block; font-family: var(--num); font-weight: 700;
-  font-size: min(15vw, 11vh, 5.5rem); line-height: .95;
+  font-size: min(15vw, 10vh, 5.5rem); line-height: .95;
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .slope-src { display: block; margin-top: 4px; font-size: .85rem; line-height: 1.3; opacity: .85; }
@@ -189,16 +191,35 @@ button { font: inherit; color: inherit; }
 }
 .btn.primary { background: var(--ink); color: var(--on-ink); border-color: var(--ink); font-size: 1.25rem; }
 .btn.confirm { border-color: var(--bad); color: var(--bad); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.small { min-height: 44px; font-size: .95rem; border-radius: 12px; }
+.btn.ghost { background: transparent; }
 
-/* Réglages */
+/* Message temporaire */
+.toast {
+  position: fixed; z-index: 20;
+  left: 50%; top: calc(env(safe-area-inset-top, 0px) + 62px);
+  width: min(560px, calc(100% - 28px));
+  transform: translate(-50%, -6px);
+  background: var(--ink); color: var(--on-ink);
+  border-radius: 14px; padding: 12px 16px;
+  font-size: .95rem; line-height: 1.4;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .28);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+
+/* Fenêtres */
 dialog {
-  width: min(440px, calc(100% - 24px)); max-height: calc(100% - 24px);
+  width: min(460px, calc(100% - 24px)); max-height: calc(100% - 24px);
+  overflow: auto;
   border: 1px solid var(--line); border-radius: 20px; padding: 20px;
   background: var(--surface); color: var(--ink);
 }
 dialog::backdrop { background: rgba(10, 14, 18, .55); }
 dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-size: 1.9rem; line-height: 1; }
-.set { margin: 0 0 20px; padding: 0; border: 0; }
+.set { margin: 0 0 22px; padding: 0; border: 0; }
 .set legend, .set h3 { padding: 0; margin: 0 0 8px; font-size: 1rem; font-weight: 600; }
 .set p { margin: 0 0 10px; font-size: .92rem; line-height: 1.45; color: var(--muted); max-width: 60ch; }
 .seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
@@ -209,30 +230,47 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
 .seg label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: -3px; }
 .check { display: flex; gap: 10px; align-items: flex-start; font-size: .95rem; line-height: 1.4; padding: 6px 0; cursor: pointer; }
 .check input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--ink); flex: none; }
-.calib-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.calib-msg { font-size: .9rem; color: var(--muted); }
-.calib-msg[data-tone="ok"] { color: var(--ok); }
-.calib-msg[data-tone="bad"] { color: var(--bad); }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row input[type="number"] {
+  width: 7.5em; min-height: 44px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--bg); font-size: 1rem;
+}
+.msg { margin-top: 8px; font-size: .9rem; line-height: 1.4; color: var(--muted); }
+.msg[data-tone="ok"] { color: var(--ok); }
+.msg[data-tone="bad"] { color: var(--bad); }
+.link-btn { padding: 0; border: 0; background: none; text-decoration: underline; cursor: pointer; font-size: .9rem; color: var(--ink); }
 .dlg-actions { display: flex; justify-content: flex-end; margin-top: 4px; }
-.btn.small { min-height: 46px; font-size: 1rem; }
+
+/* Historique */
+.hist-sum { margin: -6px 0 14px; font-size: .95rem; line-height: 1.45; color: var(--muted); }
+.hist-msg { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--bg); font-size: .92rem; line-height: 1.4; }
+.hist-msg:empty { display: none; }
+.rides { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 10px; }
+.ride { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+.ride-date { margin-bottom: 8px; font-weight: 600; }
+.ride-stats { margin: 0 0 12px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.ride-stats dt { font-size: .8rem; color: var(--muted); }
+.ride-stats dd { margin: 0; font-family: var(--num); font-weight: 600; font-size: 1.3rem; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ride-stats small { font-family: var(--text); font-size: .75rem; font-weight: 500; color: var(--muted); margin-left: .2em; }
+.ride-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* Écran large ou paysage : deux colonnes */
 @media (min-aspect-ratio: 5/4) {
   .app {
     max-width: 1040px;
+    min-height: 330px;
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    min-height: 320px;
     grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas: "status status" "speed slope" "controls stats";
     column-gap: 20px;
   }
-  .speed-value { font-size: min(22vw, 42vh, 15rem); }
-  .dist-value { font-size: min(8vw, 13vh, 5rem); }
-  .slope-value { font-size: min(7vw, 13vh, 5rem); }
+  .speed-value { font-size: min(22vw, 40vh, 15rem); }
+  .dist-value { font-size: min(8vw, 12vh, 5rem); }
+  .slope-value { font-size: min(7vw, 12vh, 5rem); }
   .slope { min-height: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .road-g, .slope { transition: none; }
+  .road-g, .slope, .toast { transition: none; }
 }
 </style>
 </head>
@@ -240,12 +278,19 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
 <main class="app">
   <header class="status">
     <div class="pill" id="gpsPill" data-state="off"><i class="dot" aria-hidden="true"></i><span id="gpsText">GPS inactif</span></div>
-    <button class="icon-btn" id="settingsBtn" type="button" aria-label="Réglages">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="3.2"/>
-        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
-      </svg>
-    </button>
+    <div class="status-actions">
+      <button class="icon-btn" id="historyBtn" type="button" aria-label="Mes sorties">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 3.5V8h4.5"/><path d="M12 7.5V12l3 2"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="settingsBtn" type="button" aria-label="Réglages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.2"/>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+        </svg>
+      </button>
+    </div>
   </header>
 
   <section class="speed stale" id="speedBox" aria-label="Vitesse">
@@ -256,15 +301,17 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
     <p class="notice" id="notice">Appuyez sur Démarrer pour lancer le GPS.</p>
   </section>
 
-  <section class="stats" aria-label="Distance et temps">
+  <section class="stats" aria-label="Distance, dénivelé et temps">
     <div class="dist">
       <span class="label">Distance</span>
       <span class="dist-value"><span id="distance">0,00</span><small>km</small></span>
+      <span class="dist-sub">Dénivelé <b id="gain">0</b><small>m</small></span>
     </div>
     <dl class="mini">
-      <div><dt>Temps</dt><dd id="time">0:00:00</dd></div>
+      <div id="timeRow"><dt>Temps</dt><dd id="time">0:00:00</dd></div>
       <div><dt>Moyenne</dt><dd><span id="avg">0,0</span><small>km/h</small></dd></div>
       <div><dt>Max</dt><dd><span id="max">0,0</span><small>km/h</small></dd></div>
+      <div><dt>Altitude</dt><dd><span id="alt">—</span><small>m</small></dd></div>
     </dl>
   </section>
 
@@ -289,9 +336,11 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
 
   <footer class="controls">
     <button class="btn primary" id="startBtn" type="button">Démarrer</button>
-    <button class="btn" id="resetBtn" type="button">Remettre à zéro</button>
+    <button class="btn" id="finishBtn" type="button" disabled>Terminer</button>
   </footer>
 </main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <dialog id="settings" aria-labelledby="setTitle">
   <h2 id="setTitle">Réglages</h2>
@@ -308,13 +357,24 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
   <div class="set">
     <h3>Calibrer le capteur</h3>
     <p>Fixez le téléphone sur le guidon, posez le vélo sur un sol bien plat et immobile, puis lancez la calibration. À refaire si vous changez la position du téléphone.</p>
-    <div class="calib-row">
+    <div class="row">
       <button class="btn small" id="calibBtn" type="button">Calibrer à plat</button>
-      <span class="calib-msg" id="calibMsg">Pas encore calibré</span>
+      <span class="msg" id="calibMsg">Pas encore calibré</span>
     </div>
   </div>
 
   <div class="set">
+    <h3>Corriger l’altitude</h3>
+    <p>L’altitude donnée par le GPS est souvent décalée de plusieurs dizaines de mètres. Si vous connaissez l’altitude de l’endroit où vous êtes (panneau, carte), saisissez-la. La correction est gardée pour les sorties suivantes et ne change pas le dénivelé.</p>
+    <div class="row">
+      <input type="number" id="altInput" inputmode="numeric" step="1" placeholder="ex. 120" aria-label="Altitude réelle en mètres">
+      <button class="btn small" id="altApply" type="button">Appliquer</button>
+    </div>
+    <div class="msg" id="altMsg"></div>
+  </div>
+
+  <div class="set">
+    <label class="check"><input type="checkbox" id="autoPauseChk"><span>Pause automatique aux arrêts (le temps affiché est alors le temps de roulage)</span></label>
     <label class="check"><input type="checkbox" id="invertChk"><span>Inverser le sens de la pente (si une montée s’affiche en descente)</span></label>
     <label class="check"><input type="checkbox" id="wakeChk"><span>Garder l’écran allumé pendant la sortie</span></label>
   </div>
@@ -322,22 +382,36 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
   <div class="dlg-actions"><button class="btn small primary" id="closeSettings" type="button">Fermer</button></div>
 </dialog>
 
-<script data-app>
+<dialog id="history" aria-labelledby="histTitle">
+  <h2 id="histTitle">Mes sorties</h2>
+  <p class="hist-sum" id="histSum"></p>
+  <p class="hist-msg" id="histMsg" role="status" aria-live="polite"></p>
+  <ul class="rides" id="rideList"></ul>
+  <div class="dlg-actions"><button class="btn small primary" id="closeHistory" type="button">Fermer</button></div>
+</dialog>
+
+<script>
 (() => {
   'use strict';
 
   const $ = id => document.getElementById(id);
   const el = {
     gpsPill: $('gpsPill'), gpsText: $('gpsText'), speedBox: $('speedBox'), speed: $('speed'), notice: $('notice'),
-    distance: $('distance'), time: $('time'), avg: $('avg'), max: $('max'),
+    distance: $('distance'), gain: $('gain'), time: $('time'), timeRow: $('timeRow'), avg: $('avg'), max: $('max'), alt: $('alt'),
     slopePanel: $('slopePanel'), slopeLabel: $('slopeLabel'), slope: $('slope'), slopeSrc: $('slopeSrc'), roadG: $('roadG'),
-    startBtn: $('startBtn'), resetBtn: $('resetBtn'), settingsBtn: $('settingsBtn'), dlg: $('settings'),
-    calibBtn: $('calibBtn'), calibMsg: $('calibMsg'), invertChk: $('invertChk'), wakeChk: $('wakeChk'), closeSettings: $('closeSettings')
+    startBtn: $('startBtn'), finishBtn: $('finishBtn'), settingsBtn: $('settingsBtn'), historyBtn: $('historyBtn'), toast: $('toast'),
+    dlg: $('settings'), calibBtn: $('calibBtn'), calibMsg: $('calibMsg'), invertChk: $('invertChk'), wakeChk: $('wakeChk'),
+    autoPauseChk: $('autoPauseChk'), altInput: $('altInput'), altApply: $('altApply'), altMsg: $('altMsg'), closeSettings: $('closeSettings'),
+    histDlg: $('history'), histSum: $('histSum'), histMsg: $('histMsg'), rideList: $('rideList'), closeHistory: $('closeHistory')
   };
 
-  const STOP = 0.8;            // m/s : en dessous, on considère le vélo à l’arrêt
-  const MAX_ACC = 30;          // m : précision GPS au-delà de laquelle on ignore le point pour la distance
+  const STOP = 0.8;              // m/s : en dessous, le vélo est considéré à l’arrêt
+  const MAX_ACC = 30;            // m : précision au-delà de laquelle un point est ignoré pour la distance
   const G = 9.81;
+  const GAP_S = 15;              // s : au-delà, on considère qu’il y a eu une interruption
+  const ALT_STEP = 4;            // m : seuil anti-bruit pour le dénivelé
+  const RESUME_MAX = 30 * 60e3;  // reprise automatique si l’appli a été fermée depuis moins de 30 min
+  const fmt0 = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
   const fmt1 = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const fmt2 = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -347,29 +421,135 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
   };
 
   const S = {
-    running: false,
-    distance: 0, elapsedMs: 0, movingMs: 0, maxSpeed: 0,
-    speed: null, lastSpeedWall: 0,
-    lastFix: null, lastFixWall: 0, accuracy: null,
+    running: false, rideStart: null,
+    distance: 0, elapsedMs: 0, movingMs: 0, maxSpeed: 0, gain: 0,
+    speed: null, lastSpeedWall: 0, lastMovingWall: 0, movingSinceFix: 0,
+    lastFix: null, lastFixRun: false, lastFixWall: 0, accuracy: null,
     gps: 'off',
     odo: 0, altTrack: [], gpsSlope: null, gpsSlopeWall: 0,
+    altS: null, altRef: null,
     aLong: 0, aWall: 0, vPrev: null,
     sensor: 'unknown', f: null, lastMotionT: 0, calib: null, sensorSlope: null,
-    prefs: { source: 'auto', invert: false, wake: true }
+    track: { segments: [] }, needNewSeg: true, trackDirty: false,
+    prefs: { source: 'auto', invert: false, wake: true, autoPause: true, altOffset: 0 }
   };
 
+  // ---------- Reprise de la sortie en cours ----------
+  let resumeAfterRestart = false;
   const saved = store.get('velo.session');
   if (saved) {
     S.distance = +saved.distance || 0; S.elapsedMs = +saved.elapsedMs || 0;
-    S.movingMs = +saved.movingMs || 0; S.maxSpeed = +saved.maxSpeed || 0;
+    S.movingMs = +saved.movingMs || 0; S.maxSpeed = +saved.maxSpeed || 0; S.gain = +saved.gain || 0;
+    S.rideStart = saved.rideStart || (S.elapsedMs > 0 ? Date.now() - S.elapsedMs : null);
+    const age = Date.now() - (+saved.savedAt || 0);
+    if (saved.running && age >= 0 && age < RESUME_MAX) {
+      resumeAfterRestart = true;
+      S.elapsedMs += age;
+      const lf = saved.lastFix;
+      if (lf && isFinite(lf.lat) && isFinite(lf.lon) && isFinite(lf.t)) {
+        S.lastFix = { lat: lf.lat, lon: lf.lon, t: lf.t, alt: null };
+        S.lastFixRun = true;
+      }
+    }
   }
   Object.assign(S.prefs, store.get('velo.prefs') || {});
   S.calib = store.get('velo.calib');
 
   function persist() {
-    store.set('velo.session', { distance: S.distance, elapsedMs: S.elapsedMs, movingMs: S.movingMs, maxSpeed: S.maxSpeed });
+    store.set('velo.session', {
+      distance: S.distance, elapsedMs: S.elapsedMs, movingMs: S.movingMs, maxSpeed: S.maxSpeed, gain: S.gain,
+      rideStart: S.rideStart, running: S.running, savedAt: Date.now(),
+      lastFix: S.lastFix ? { lat: S.lastFix.lat, lon: S.lastFix.lon, t: S.lastFix.t } : null
+    });
   }
   function savePrefs() { store.set('velo.prefs', S.prefs); }
+
+  // ---------- Mémoire du téléphone (historique et trace) ----------
+  const idb = {
+    db: null,
+    open() {
+      if (!this.db) {
+        this.db = new Promise((resolve, reject) => {
+          if (!('indexedDB' in window)) { reject(new Error('indisponible')); return; }
+          const r = indexedDB.open('compteur-velo', 1);
+          r.onupgradeneeded = () => {
+            const db = r.result;
+            if (!db.objectStoreNames.contains('rides')) db.createObjectStore('rides', { keyPath: 'id' });
+            if (!db.objectStoreNames.contains('tracks')) db.createObjectStore('tracks');
+            if (!db.objectStoreNames.contains('current')) db.createObjectStore('current');
+          };
+          r.onsuccess = () => resolve(r.result);
+          r.onerror = () => reject(r.error);
+        });
+      }
+      return this.db;
+    },
+    async run(stores, mode, fn) {
+      const db = await this.open();
+      return new Promise((resolve, reject) => {
+        const t = db.transaction(stores, mode);
+        const req = fn(t);
+        t.oncomplete = () => resolve(req ? req.result : undefined);
+        t.onerror = () => reject(t.error);
+        t.onabort = () => reject(t.error);
+      });
+    },
+    getRides() { return this.run('rides', 'readonly', t => t.objectStore('rides').getAll()); },
+    getTrack(id) { return this.run('tracks', 'readonly', t => t.objectStore('tracks').get(id)); },
+    saveRide(summary, segments) {
+      return this.run(['rides', 'tracks'], 'readwrite', t => {
+        t.objectStore('rides').put(summary);
+        t.objectStore('tracks').put(segments, summary.id);
+      });
+    },
+    deleteRide(id) {
+      return this.run(['rides', 'tracks'], 'readwrite', t => {
+        t.objectStore('rides').delete(id);
+        t.objectStore('tracks').delete(id);
+      });
+    },
+    getCurrent() { return this.run('current', 'readonly', t => t.objectStore('current').get('track')); },
+    setCurrent(v) { return this.run('current', 'readwrite', t => t.objectStore('current').put(v, 'track')); },
+    clearCurrent() { return this.run('current', 'readwrite', t => t.objectStore('current').delete('track')); }
+  };
+
+  function saveTrack() {
+    if (!S.trackDirty || !S.rideStart) return;
+    S.trackDirty = false;
+    idb.setCurrent({ rideStart: S.rideStart, segments: S.track.segments }).catch(() => {});
+  }
+
+  function loadCurrentTrack() {
+    idb.getCurrent().then(v => {
+      if (!v) return;
+      if (S.rideStart && v.rideStart === S.rideStart && Array.isArray(v.segments)) {
+        S.track.segments = v.segments.concat(S.track.segments);
+      } else if (!S.rideStart) {
+        idb.clearCurrent().catch(() => {});
+      }
+    }).catch(() => {});
+  }
+
+  function recordPoint(fix) {
+    const segs = S.track.segments;
+    if (S.needNewSeg || !segs.length) { segs.push([]); S.needNewSeg = false; }
+    const seg = segs[segs.length - 1];
+    const last = seg[seg.length - 1];
+    if (last && fix.t - last[0] < 15000 && haversine({ lat: last[1], lon: last[2] }, fix) < 5) return;
+    seg.push([fix.t, Math.round(fix.lat * 1e6) / 1e6, Math.round(fix.lon * 1e6) / 1e6, fix.alt == null ? null : Math.round(fix.alt * 10) / 10]);
+    S.trackDirty = true;
+  }
+
+  // ---------- Messages ----------
+  let toastTimer = null;
+  function toast(text, ms) {
+    if (el.histDlg.open) { el.histMsg.textContent = text; return; }
+    el.toast.textContent = text;
+    el.toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.toast.classList.remove('show'), ms || 7000);
+  }
+  el.toast.addEventListener('click', () => el.toast.classList.remove('show'));
 
   // ---------- GPS : vitesse, distance, altitude ----------
   let watchId = null;
@@ -380,6 +560,12 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
     try {
       watchId = navigator.geolocation.watchPosition(onPos, onPosErr, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
     } catch (e) { S.gps = 'denied'; }
+  }
+  function stopGps() {
+    if (watchId !== null) { try { navigator.geolocation.clearWatch(watchId); } catch (e) {} watchId = null; }
+    if (S.gps !== 'denied' && S.gps !== 'unsupported') S.gps = 'off';
+    S.speed = null; S.lastFix = null; S.lastFixRun = false; S.vPrev = null;
+    S.altS = null; S.altRef = null; S.altTrack = [];
   }
   function onPosErr(err) {
     if (err && err.code === 1) {
@@ -402,7 +588,6 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
     if (v > 33) return;                       // > 120 km/h : point aberrant
     S.speed = S.speed == null ? v : S.speed + 0.6 * (v - S.speed);
     S.lastSpeedWall = Date.now();
-    // accélération longitudinale (sert à corriger le capteur de pente)
     if (S.vPrev) {
       const dt = (t - S.vPrev.t) / 1000;
       if (dt >= 0.3 && dt <= 5) {
@@ -412,6 +597,35 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
       }
     }
     S.vPrev = { v: S.speed, t };
+  }
+
+  // Interruption (appel, écran éteint, tunnel, appli fermée) : on comble le trou
+  function handleGap(prev, fix, d, dt) {
+    S.altTrack = [];
+    if (!S.running || !S.lastFixRun) return;
+    const v = d / dt, gapMs = dt * 1000;
+    if (v >= STOP && v <= 20) {
+      S.distance += d;
+      S.odo += d;
+      S.movingMs += Math.max(0, gapMs - S.movingSinceFix);
+      S.lastMovingWall = Date.now();
+      toast('Interruption de ' + fmtDur(gapMs) + '\u00A0: ' + fmt2.format(d / 1000) + ' km ajoutés en ligne droite (estimation).');
+    } else if (v > 20) {
+      toast('Interruption de ' + fmtDur(gapMs) + '\u00A0: déplacement trop rapide pour du vélo, non compté.');
+    } else if (dt >= 60) {
+      toast('Interruption de ' + fmtDur(gapMs) + '. Vous étiez à l’arrêt, rien n’a été ajouté.');
+    }
+  }
+
+  // Altitude lissée et dénivelé positif
+  function updateAltitude(fix, dt, moving) {
+    if (fix.alt == null) return;
+    if (S.altS == null) { S.altS = fix.alt; S.altRef = fix.alt; return; }
+    const k = dt > 0 ? 1 - Math.exp(-dt / 8) : 0.2;
+    S.altS += k * (fix.alt - S.altS);
+    if (S.altRef == null || !(S.running && moving)) { S.altRef = S.altS; return; }
+    if (S.altS > S.altRef + ALT_STEP) { S.gain += S.altS - S.altRef; S.altRef = S.altS; }
+    else if (S.altS < S.altRef - ALT_STEP) { S.altRef = S.altS; }
   }
 
   function onPos(p) {
@@ -426,7 +640,9 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
       render(); return;
     }
 
-    const fix = { lat: c.latitude, lon: c.longitude, t, alt: (typeof c.altitude === 'number' && isFinite(c.altitude)) ? c.altitude : null };
+    const altOk = typeof c.altitude === 'number' && isFinite(c.altitude) &&
+      (c.altitudeAccuracy == null || c.altitudeAccuracy <= 25);
+    const fix = { lat: c.latitude, lon: c.longitude, t, alt: altOk ? c.altitude : null };
     const prev = S.lastFix;
     let d = 0, dt = 0;
     if (prev) {
@@ -434,11 +650,22 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
       if (dt <= 0) return;
       d = haversine(prev, fix);
     }
-    if (hasSpeed) setSpeed(c.speed, t);
-    else if (prev && dt > 0) setSpeed(d / dt, t);
+    const gap = !!prev && dt > GAP_S;
+
+    if (gap) {
+      S.vPrev = null;
+      if (hasSpeed) { S.speed = c.speed; S.lastSpeedWall = Date.now(); } else { S.speed = null; }
+      handleGap(prev, fix, d, dt);
+    } else if (hasSpeed) {
+      setSpeed(c.speed, t);
+    } else if (prev) {
+      setSpeed(d / dt, t);
+    }
 
     const moving = S.speed != null && S.speed >= STOP;
-    if (prev && moving && d < 40 * dt) {
+    if (moving) S.lastMovingWall = Date.now();
+
+    if (!gap && prev && moving && d < 40 * dt) {
       S.odo += d;
       if (S.running) {
         S.distance += d;
@@ -450,7 +677,12 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
         updateGpsSlope();
       }
     }
+    updateAltitude(fix, dt, moving);
+    if (S.running && moving) recordPoint(fix);
+
     S.lastFix = fix;
+    S.lastFixRun = S.running;
+    S.movingSinceFix = 0;
     render();
   }
 
@@ -479,7 +711,6 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
     motionAttached = true;
     setTimeout(() => { if (S.sensor === 'unknown') { S.sensor = 'none'; render(); } }, 3000);
   }
-  // à appeler directement dans un geste (iPhone)
   function requestMotion() {
     if (needsMotionPerm) {
       return window.DeviceMotionEvent.requestPermission()
@@ -503,7 +734,7 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
     if (!S.f) { S.f = v.slice(); S.lastMotionT = now; return; }
     const dt = Math.min(0.2, Math.max(0.001, (now - S.lastMotionT) / 1000));
     S.lastMotionT = now;
-    const k = dt / (0.6 + dt);                 // filtre passe-bas : gomme les vibrations de la route
+    const k = dt / (0.6 + dt);
     for (let i = 0; i < 3; i++) S.f[i] += k * (v[i] - S.f[i]);
 
     const c = S.calib;
@@ -511,7 +742,7 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
       const phi = c.plane === 'yz' ? Math.atan2(S.f[2], S.f[1]) : Math.atan2(S.f[2], S.f[0]);
       let th = wrap(phi - c.phi0) * c.sign * (S.prefs.invert ? -1 : 1);
       const aL = (Date.now() - S.aWall < 3000) ? S.aLong : 0;
-      th -= Math.atan(aL / G);                 // retire l’effet des accélérations et freinages
+      th -= Math.atan(aL / G);
       const pct = Math.max(-40, Math.min(40, Math.tan(th) * 100));
       const k2 = dt / (1.0 + dt);
       S.sensorSlope = S.sensorSlope == null ? pct : S.sensorSlope + k2 * (pct - S.sensorSlope);
@@ -520,18 +751,18 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
   }
 
   function screenAngle() {
-    let a = (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle
+    const a = (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle
       : (typeof window.orientation === 'number' ? window.orientation : 0);
     return ((a % 360) + 360) % 360;
   }
   const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-  function setCalibMsg(text, tone) { el.calibMsg.textContent = text; el.calibMsg.dataset.tone = tone || ''; }
+  function setMsg(node, text, tone) { node.textContent = text; node.dataset.tone = tone || ''; }
 
   function calibrate() {
-    const p = requestMotion();                 // premier appel, dans le geste
+    const p = requestMotion();
     el.calibBtn.disabled = true;
-    setCalibMsg('Mesure en cours, ne bougez pas le vélo…');
+    setMsg(el.calibMsg, 'Mesure en cours, ne bougez pas le vélo…');
     p.then(() => {
       calibSamples = []; calibrating = true;
       setTimeout(finishCalib, 2000);
@@ -541,12 +772,12 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
   function finishCalib() {
     calibrating = false; el.calibBtn.disabled = false;
     const n = calibSamples.length;
-    if (n < 10) { setCalibMsg('Aucune donnée du capteur de mouvement ici. La pente sera estimée par l’altitude GPS.', 'bad'); render(); return; }
+    if (n < 10) { setMsg(el.calibMsg, 'Aucune donnée du capteur de mouvement ici. La pente sera estimée par l’altitude GPS.', 'bad'); render(); return; }
     const m = [0, 0, 0];
     for (const v of calibSamples) for (let i = 0; i < 3; i++) m[i] += v[i] / n;
     let ss = 0;
     for (const v of calibSamples) for (let i = 0; i < 3; i++) ss += (v[i] - m[i]) ** 2;
-    if (Math.sqrt(ss / n) > 0.8) { setCalibMsg('Le téléphone a bougé pendant la mesure. Recommencez, vélo immobile.', 'bad'); return; }
+    if (Math.sqrt(ss / n) > 0.8) { setMsg(el.calibMsg, 'Le téléphone a bougé pendant la mesure. Recommencez, vélo immobile.', 'bad'); return; }
 
     const ax = Math.abs(m[0]), ay = Math.abs(m[1]), ang = screenAngle();
     let plane;
@@ -568,12 +799,12 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
   function showCalibState() {
     if (S.calib && S.calib.at) {
       const d = new Date(S.calib.at);
-      setCalibMsg('Calibré le ' + d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' +
+      setMsg(el.calibMsg, 'Calibré le ' + d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' +
         d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }), 'ok');
     } else if (S.sensor === 'none') {
-      setCalibMsg('Capteur de mouvement non détecté pour l’instant.');
+      setMsg(el.calibMsg, 'Capteur de mouvement non détecté pour l’instant.');
     } else {
-      setCalibMsg('Pas encore calibré');
+      setMsg(el.calibMsg, 'Pas encore calibré');
     }
   }
 
@@ -614,17 +845,32 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
   }
   function releaseWake() { try { if (wakeLock) wakeLock.release(); } catch (e) {} wakeLock = null; }
 
-  // ---------- Affichage ----------
+  // ---------- Formats ----------
   function fmtTime(ms) {
     const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
     return h + ':' + String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+  }
+  function fmtDur(ms) {
+    const s = Math.round(ms / 1000);
+    if (s < 60) return s + '\u00A0s';
+    const m = Math.floor(s / 60), r = s % 60;
+    if (m < 60) return m + '\u00A0min' + (r ? ' ' + String(r).padStart(2, '0') + '\u00A0s' : '');
+    return Math.floor(m / 60) + '\u00A0h ' + String(m % 60).padStart(2, '0') + '\u00A0min';
   }
   function fmtSlope(p) {
     const r = Math.round(p * 10) / 10;
     const sign = r > 0 ? '+' : r < 0 ? '−' : '';
     return sign + fmt1.format(Math.abs(r)) + '\u202F%';
   }
+  function fmtGain(g) { const v = Math.round(g || 0); return v > 0 ? '+' + fmt0.format(v) : '0'; }
+  function fmtDate(ms, lower) {
+    const d = new Date(ms), opts = { weekday: 'long', day: 'numeric', month: 'long' };
+    if (d.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
+    const s = d.toLocaleDateString('fr-FR', opts) + ', ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return lower ? s : s.charAt(0).toUpperCase() + s.slice(1);
+  }
 
+  // ---------- Affichage ----------
   let noticeKey = '';
   function setNotice(key, text, tone) {
     if (key === noticeKey) return;
@@ -640,10 +886,14 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
     el.speed.textContent = fmt1.format(kmh);
     el.speedBox.classList.toggle('stale', !fresh);
 
+    const autoPaused = S.running && S.prefs.autoPause && Date.now() - S.lastMovingWall > 3000;
     el.distance.textContent = fmt2.format(S.distance / 1000);
-    el.time.textContent = fmtTime(S.elapsedMs);
+    el.gain.textContent = fmtGain(S.gain);
+    el.time.textContent = fmtTime(S.prefs.autoPause ? S.movingMs : S.elapsedMs);
+    el.timeRow.classList.toggle('dim', autoPaused);
     el.avg.textContent = fmt1.format(S.movingMs > 3000 ? (S.distance / (S.movingMs / 1000)) * 3.6 : 0);
     el.max.textContent = fmt1.format(S.maxSpeed * 3.6);
+    el.alt.textContent = S.altS == null ? '—' : fmt0.format(Math.round(S.altS + (S.prefs.altOffset || 0)));
 
     const texts = {
       off: 'GPS inactif', searching: 'Recherche du GPS…', denied: 'Localisation refusée', unsupported: 'GPS indisponible',
@@ -660,11 +910,14 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
       setNotice('off' + (S.elapsedMs > 0), S.elapsedMs > 0 ? 'Sortie en pause. Appuyez sur Reprendre pour relancer le GPS.' : 'Appuyez sur Démarrer pour lancer le GPS.', '');
     } else if (S.gps === 'searching' && !fresh) {
       setNotice('searching', 'Recherche du signal… Restez à découvert, la première position peut prendre une minute.', '');
+    } else if (autoPaused) {
+      setNotice('auto', 'Pause automatique\u00A0: le chrono repart dès que vous roulez.', '');
     } else {
       setNotice('', '', '');
     }
 
     el.startBtn.textContent = S.running ? 'Pause' : (S.elapsedMs > 0 ? 'Reprendre' : 'Démarrer');
+    el.finishBtn.disabled = !(S.running || S.elapsedMs > 0);
 
     const sl = currentSlope();
     el.slopePanel.dataset.cat = category(sl.v);
@@ -677,7 +930,6 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
       el.slopeLabel.textContent = sl.v >= 1 ? 'Montée' : sl.v <= -1 ? 'Descente' : 'Plat';
       el.slope.textContent = fmtSlope(sl.v);
       el.slopeSrc.textContent = sl.src;
-      // inclinaison du dessin exagérée ×2,5 pour être lisible d’un coup d’œil
       const deg = Math.max(-40, Math.min(40, Math.atan(sl.v / 100) * 180 / Math.PI * 2.5));
       el.roadG.style.transform = 'rotate(' + (-deg).toFixed(1) + 'deg)';
     }
@@ -692,59 +944,245 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
     if (S.running) {
       S.elapsedMs += dt;
       const fresh = S.speed != null && Date.now() - S.lastSpeedWall < 6000;
-      if (fresh && S.speed >= STOP) S.movingMs += dt;
-      if (++tickCount % 10 === 0) persist();
+      if (fresh && S.speed >= STOP) {
+        const inc = Math.min(dt, 2000);
+        S.movingMs += inc;
+        S.movingSinceFix += inc;
+      }
+      tickCount++;
+      if (tickCount % 10 === 0) persist();
+      if (tickCount % 20 === 0) saveTrack();
     }
     render();
   }, 500);
+
+  // ---------- Fin de sortie et historique ----------
+  async function finishRide() {
+    const summary = {
+      id: S.rideStart || Date.now(),
+      start: S.rideStart || Date.now() - S.elapsedMs,
+      end: Date.now(),
+      distance: S.distance, movingMs: S.movingMs, elapsedMs: S.elapsedMs,
+      maxSpeed: S.maxSpeed, gain: S.gain, altOffset: S.prefs.altOffset || 0
+    };
+    const segments = S.track.segments.filter(s => s.length);
+
+    S.running = false;
+    releaseWake();
+    stopGps();
+    S.distance = 0; S.elapsedMs = 0; S.movingMs = 0; S.maxSpeed = 0; S.gain = 0;
+    S.rideStart = null; S.track = { segments: [] }; S.needNewSeg = true; S.trackDirty = false;
+    persist();
+    render();
+
+    if (summary.distance < 50) {
+      idb.clearCurrent().catch(() => {});
+      toast('Sortie de moins de 50 m\u00A0: elle n’a pas été enregistrée.');
+      return;
+    }
+    try {
+      await idb.saveRide(summary, segments);
+      idb.clearCurrent().catch(() => {});
+      toast('Sortie enregistrée\u00A0: ' + fmt2.format(summary.distance / 1000) + ' km. Retrouvez-la dans Mes sorties.');
+    } catch (e) {
+      toast('Impossible d’enregistrer la sortie dans la mémoire du téléphone.', 10000);
+    }
+  }
+
+  function buildGpx(r, segments) {
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const iso = ms => new Date(ms).toISOString();
+    const name = esc('Sortie vélo du ' + fmtDate(r.start, true));
+    const off = r.altOffset || 0;
+    const out = [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<gpx version="1.1" creator="Compteur vélo" xmlns="http://www.topografix.com/GPX/1/1">',
+      '  <metadata><name>' + name + '</name><time>' + iso(r.start) + '</time></metadata>',
+      '  <trk>',
+      '    <name>' + name + '</name>',
+      '    <type>cycling</type>'
+    ];
+    for (const seg of segments) {
+      if (!seg.length) continue;
+      out.push('    <trkseg>');
+      for (const p of seg) {
+        const ele = p[3] == null ? '' : '<ele>' + (p[3] + off).toFixed(1) + '</ele>';
+        out.push('      <trkpt lat="' + p[1] + '" lon="' + p[2] + '">' + ele + '<time>' + iso(p[0]) + '</time></trkpt>');
+      }
+      out.push('    </trkseg>');
+    }
+    out.push('  </trk>', '</gpx>', '');
+    return out.join('\n');
+  }
+
+  async function exportRide(r) {
+    let segments = null;
+    try { segments = await idb.getTrack(r.id); } catch (e) {}
+    if (!segments || !segments.some(s => s.length)) { toast('Aucune trace GPS n’a été enregistrée pour cette sortie.'); return; }
+    const d = new Date(r.start);
+    const stamp = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') +
+      '-' + String(d.getHours()).padStart(2, '0') + 'h' + String(d.getMinutes()).padStart(2, '0');
+    const filename = 'sortie-velo-' + stamp + '.gpx';
+    const blob = new Blob([buildGpx(r, segments)], { type: 'application/gpx+xml' });
+    try {
+      const file = new File([blob], filename, { type: 'application/gpx+xml' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: filename });
+        return;
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    toast('Fichier ' + filename + ' téléchargé.');
+  }
+
+  function confirmButton(btn, label, confirmLabel, action) {
+    let timer = null;
+    btn.addEventListener('click', () => {
+      if (!timer) {
+        btn.textContent = confirmLabel; btn.classList.add('confirm');
+        timer = setTimeout(() => { timer = null; btn.textContent = label; btn.classList.remove('confirm'); }, 3000);
+        return;
+      }
+      clearTimeout(timer); timer = null;
+      btn.textContent = label; btn.classList.remove('confirm');
+      action();
+    });
+  }
+
+  function renderRides(rides) {
+    rides.sort((a, b) => b.start - a.start);
+    el.rideList.textContent = '';
+    if (!rides.length) {
+      el.histSum.textContent = 'Aucune sortie enregistrée pour l’instant. Appuyez sur Terminer à la fin d’une sortie pour l’ajouter ici.';
+      return;
+    }
+    const total = rides.reduce((s, r) => s + (r.distance || 0), 0);
+    el.histSum.textContent = rides.length + (rides.length > 1 ? ' sorties, ' : ' sortie, ') + fmt1.format(total / 1000) + ' km au total';
+
+    for (const r of rides) {
+      const li = document.createElement('li');
+      li.className = 'ride';
+      const head = document.createElement('div');
+      head.className = 'ride-date';
+      head.textContent = fmtDate(r.start);
+      li.appendChild(head);
+
+      const dl = document.createElement('dl');
+      dl.className = 'ride-stats';
+      const avg = r.movingMs > 3000 ? (r.distance / (r.movingMs / 1000)) * 3.6 : 0;
+      [['Distance', fmt2.format(r.distance / 1000), 'km'], ['Temps', fmtTime(r.movingMs || 0), ''],
+       ['Moyenne', fmt1.format(avg), 'km/h'], ['Dénivelé', fmtGain(r.gain), 'm']].forEach(([k, v, u]) => {
+        const box = document.createElement('div');
+        const dt = document.createElement('dt'); dt.textContent = k;
+        const dd = document.createElement('dd'); dd.textContent = v;
+        if (u) { const sm = document.createElement('small'); sm.textContent = u; dd.appendChild(sm); }
+        box.append(dt, dd); dl.appendChild(box);
+      });
+      li.appendChild(dl);
+
+      const actions = document.createElement('div');
+      actions.className = 'ride-actions';
+      const exp = document.createElement('button');
+      exp.type = 'button'; exp.className = 'btn small'; exp.textContent = 'Exporter en GPX';
+      exp.addEventListener('click', () => exportRide(r));
+      const del = document.createElement('button');
+      del.type = 'button'; del.className = 'btn small ghost'; del.textContent = 'Supprimer';
+      confirmButton(del, 'Supprimer', 'Confirmer la suppression', () => {
+        idb.deleteRide(r.id).then(() => {
+          rides.splice(rides.indexOf(r), 1);
+          renderRides(rides);
+          el.histMsg.textContent = 'Sortie supprimée.';
+        }).catch(() => { el.histMsg.textContent = 'La suppression a échoué. Réessayez.'; });
+      });
+      actions.append(exp, del);
+      li.appendChild(actions);
+      el.rideList.appendChild(li);
+    }
+  }
+
+  async function openHistory() {
+    el.histMsg.textContent = '';
+    el.rideList.textContent = '';
+    el.histSum.textContent = 'Chargement…';
+    openDlg(el.histDlg);
+    try {
+      renderRides((await idb.getRides()) || []);
+    } catch (e) {
+      el.histSum.textContent = 'L’historique n’est pas disponible sur ce téléphone.';
+    }
+  }
 
   // ---------- Commandes ----------
   el.startBtn.addEventListener('click', () => {
     if (needsMotionPerm && S.sensor !== 'ok') requestMotion();
     if (!S.running) {
+      if (!S.rideStart) S.rideStart = Date.now();
       startGps();
       S.running = true;
+      S.needNewSeg = true;
       requestWake();
     } else {
       S.running = false;
-      persist();
+      S.needNewSeg = true;
+      S.trackDirty = true;
+      saveTrack();
       releaseWake();
     }
+    persist();
     render();
   });
 
-  let resetTimer = null;
-  el.resetBtn.addEventListener('click', () => {
-    if (!resetTimer) {
-      el.resetBtn.textContent = 'Confirmer';
-      el.resetBtn.classList.add('confirm');
-      resetTimer = setTimeout(() => {
-        resetTimer = null;
-        el.resetBtn.textContent = 'Remettre à zéro';
-        el.resetBtn.classList.remove('confirm');
-      }, 3000);
-      return;
+  confirmButton(el.finishBtn, 'Terminer', 'Confirmer', finishRide);
+
+  function openDlg(d) { if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', ''); }
+  function closeDlg(d) { if (typeof d.close === 'function') d.close(); else d.removeAttribute('open'); }
+  [el.dlg, el.histDlg].forEach(d => d.addEventListener('click', e => { if (e.target === d) closeDlg(d); }));
+  el.closeSettings.addEventListener('click', () => closeDlg(el.dlg));
+  el.closeHistory.addEventListener('click', () => closeDlg(el.histDlg));
+  el.historyBtn.addEventListener('click', openHistory);
+
+  function showAltState() {
+    const off = S.prefs.altOffset || 0;
+    el.altMsg.textContent = '';
+    el.altMsg.dataset.tone = '';
+    const parts = [];
+    parts.push(S.altS == null ? 'Altitude GPS pas encore disponible : démarrez le GPS et attendez quelques secondes.'
+      : 'Altitude GPS brute\u00A0: ' + fmt0.format(Math.round(S.altS)) + ' m.');
+    if (off) parts.push(' Correction en cours\u00A0: ' + (off > 0 ? '+' : '−') + fmt0.format(Math.abs(Math.round(off))) + ' m. ');
+    el.altMsg.append(parts.join(''));
+    if (off) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'link-btn'; b.textContent = 'Retirer la correction';
+      b.addEventListener('click', () => { S.prefs.altOffset = 0; savePrefs(); showAltState(); render(); });
+      el.altMsg.appendChild(b);
     }
-    clearTimeout(resetTimer); resetTimer = null;
-    el.resetBtn.textContent = 'Remettre à zéro';
-    el.resetBtn.classList.remove('confirm');
-    S.distance = 0; S.elapsedMs = 0; S.movingMs = 0; S.maxSpeed = 0;
-    persist(); render();
+  }
+  el.altApply.addEventListener('click', () => {
+    const v = parseFloat(String(el.altInput.value).replace(',', '.'));
+    if (!isFinite(v)) { setMsg(el.altMsg, 'Saisissez une altitude en mètres.', 'bad'); return; }
+    if (S.altS == null) { setMsg(el.altMsg, 'Altitude GPS pas encore disponible : démarrez le GPS et attendez quelques secondes.', 'bad'); return; }
+    S.prefs.altOffset = v - S.altS;
+    savePrefs();
+    el.altInput.value = '';
+    showAltState();
+    render();
   });
 
   function syncSettings() {
     el.dlg.querySelectorAll('input[name="src"]').forEach(r => { r.checked = r.value === S.prefs.source; });
     el.invertChk.checked = !!S.prefs.invert;
     el.wakeChk.checked = !!S.prefs.wake;
+    el.autoPauseChk.checked = !!S.prefs.autoPause;
     if (!calibrating) showCalibState();
+    showAltState();
   }
-  el.settingsBtn.addEventListener('click', () => {
-    syncSettings();
-    if (typeof el.dlg.showModal === 'function') el.dlg.showModal(); else el.dlg.setAttribute('open', '');
-  });
-  const closeDlg = () => { if (typeof el.dlg.close === 'function') el.dlg.close(); else el.dlg.removeAttribute('open'); };
-  el.closeSettings.addEventListener('click', closeDlg);
-  el.dlg.addEventListener('click', e => { if (e.target === el.dlg) closeDlg(); });
+  el.settingsBtn.addEventListener('click', () => { syncSettings(); openDlg(el.dlg); });
   el.dlg.querySelectorAll('input[name="src"]').forEach(r => r.addEventListener('change', () => {
     S.prefs.source = r.value; savePrefs(); render();
   }));
@@ -753,18 +1191,28 @@ dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-si
     S.prefs.wake = el.wakeChk.checked; savePrefs();
     if (!S.prefs.wake) releaseWake(); else if (S.running) requestWake();
   });
+  el.autoPauseChk.addEventListener('change', () => { S.prefs.autoPause = el.autoPauseChk.checked; savePrefs(); render(); });
   el.calibBtn.addEventListener('click', calibrate);
 
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') persist();
+    if (document.visibilityState === 'hidden') { persist(); S.trackDirty = true; saveTrack(); }
     else if (S.running) requestWake();
   });
-  window.addEventListener('pagehide', persist);
+  window.addEventListener('pagehide', () => { persist(); S.trackDirty = true; saveTrack(); });
 
+  // ---------- Démarrage ----------
   if (!needsMotionPerm) attachMotion();
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  loadCurrentTrack();
+  if (resumeAfterRestart) {
+    S.running = true;
+    S.needNewSeg = true;
+    startGps();
+    requestWake();
+    toast('Sortie reprise après la fermeture de l’appli.');
+  }
   render();
 
-  // Mode hors ligne
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
   }

@@ -1,6 +1,6 @@
 // Compteur vélo : garde l'appli en mémoire pour qu'elle démarre même sans réseau.
 // Changez le numéro de version à chaque mise à jour des fichiers.
-const CACHE = 'compteur-velo-v1';
+const CACHE = 'compteur-velo-v2';
 const FILES = [
   './', 'index.html', 'manifest.json',
   'icon-192.png', 'icon-512.png', 'icon-maskable-512.png',
@@ -9,7 +9,7 @@ const FILES = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES.map((f) => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
