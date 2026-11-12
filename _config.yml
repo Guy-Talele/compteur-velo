@@ -1,0 +1,2 @@
+# Pour GitHub Pages : publie aussi le dossier .well-known (nécessaire à l'appli Android)
+include: [".well-known"]

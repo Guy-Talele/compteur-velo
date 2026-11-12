@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Compteur vélo</title>
+<meta name="description" content="Vitesse, distance et pente pour le vélo">
+<meta name="theme-color" content="#1E2226">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+@font-face { font-family: "Barlow"; font-weight: 400; font-style: normal; font-display: swap; src: url("barlow-400.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 500; font-style: normal; font-display: swap; src: url("barlow-500.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 600; font-style: normal; font-display: swap; src: url("barlow-600.woff2") format("woff2"); }
+@font-face { font-family: "Barlow Condensed"; font-weight: 600; font-style: normal; font-display: swap; src: url("barlow-condensed-600.woff2") format("woff2"); }
+@font-face { font-family: "Barlow Condensed"; font-weight: 700; font-style: normal; font-display: swap; src: url("barlow-condensed-700.woff2") format("woff2"); }
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+  --bg: #E6EBEE;
+  --surface: #FFFFFF;
+  --surface-2: #D3DADF;
+  --ink: #1A2024;
+  --muted: #56626A;
+  --line: #C3CCD1;
+  --on-ink: #FFFFFF;
+  --focus: #1C6FD1;
+  --ok: #2F8F4E;
+  --warn: #D9661F;
+  --bad: #C8322B;
+  --num: "Barlow Condensed", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+  --text: "Barlow", "Segoe UI", Roboto, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #1E2226;
+    --surface: #2A3036;
+    --surface-2: #363D44;
+    --ink: #F1F4F6;
+    --muted: #A0ABB3;
+    --line: #414950;
+    --on-ink: #1E2226;
+    --focus: #7DB3FF;
+    --ok: #4CB86E;
+    --warn: #F08A45;
+    --bad: #EF5A50;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1E2226;
+  --surface: #2A3036;
+  --surface-2: #363D44;
+  --ink: #F1F4F6;
+  --muted: #A0ABB3;
+  --line: #414950;
+  --on-ink: #1E2226;
+  --focus: #7DB3FF;
+  --ok: #4CB86E;
+  --warn: #F08A45;
+  --bad: #EF5A50;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--text);
+  font-size: 16px;
+  -webkit-tap-highlight-color: transparent;
+  overflow: auto;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.app {
+  height: 100%;
+  min-height: 480px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 10px max(14px, env(safe-area-inset-right, 0px)) 14px max(14px, env(safe-area-inset-left, 0px));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+  grid-template-areas: "status" "speed" "stats" "slope" "controls";
+  gap: 12px;
+}
+
+/* Barre d’état */
+.status { grid-area: status; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; font-size: .95rem; font-weight: 500; color: var(--muted); min-width: 0; }
+.pill span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line); flex: none; }
+.pill[data-state="ok"] .dot { background: var(--ok); }
+.pill[data-state="weak"] .dot, .pill[data-state="searching"] .dot { background: var(--warn); }
+.pill[data-state="denied"] .dot, .pill[data-state="unsupported"] .dot { background: var(--bad); }
+.icon-btn {
+  width: 44px; height: 44px; flex: none;
+  display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 50%;
+  background: var(--surface); cursor: pointer;
+}
+.icon-btn svg { width: 22px; height: 22px; }
+
+/* Vitesse */
+.speed { grid-area: speed; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 0; }
+.speed-row { display: flex; align-items: baseline; gap: .35em; }
+.speed-value {
+  font-family: var(--num); font-weight: 700;
+  font-size: min(36vw, 26vh, 15rem);
+  line-height: .82; letter-spacing: -.01em;
+  font-variant-numeric: tabular-nums;
+}
+.speed-unit { font-size: 1.15rem; font-weight: 500; color: var(--muted); }
+.speed.stale .speed-value { color: var(--muted); opacity: .55; }
+.notice {
+  margin: 14px 0 0; max-width: 34ch; text-align: center;
+  font-size: .95rem; line-height: 1.4; color: var(--muted);
+}
+.notice[data-tone="bad"] { color: var(--ink); }
+.notice button {
+  display: block; margin: 10px auto 0; padding: 10px 16px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer; font-weight: 600;
+}
+
+/* Distance et compléments */
+.stats {
+  grid-area: stats;
+  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 14px;
+  padding-top: 12px; border-top: 1px solid var(--line);
+}
+.label { font-size: .95rem; font-weight: 500; color: var(--muted); }
+.dist .label { display: block; margin-bottom: 2px; }
+.dist-value {
+  font-family: var(--num); font-weight: 600;
+  font-size: min(16vw, 11vh, 5.5rem); line-height: .9;
+  font-variant-numeric: tabular-nums;
+}
+.dist-value small, .mini small { font-family: var(--text); font-size: 1rem; font-weight: 500; color: var(--muted); margin-left: .25em; letter-spacing: 0; }
+.mini { margin: 0; display: grid; gap: 4px; align-content: start; }
+.mini div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.mini dt { font-size: .9rem; color: var(--muted); }
+.mini dd { margin: 0; font-family: var(--num); font-weight: 600; font-size: 1.6rem; line-height: 1.05; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mini small { font-size: .8rem; }
+
+/* Pente : le bloc de couleur */
+.slope {
+  grid-area: slope;
+  --slope-bg: var(--surface); --slope-ink: var(--ink);
+  background: var(--slope-bg); color: var(--slope-ink);
+  border-radius: 20px; padding: 14px 16px;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(110px, 42%); align-items: center; gap: 16px;
+  min-height: 124px;
+  transition: background-color .4s ease, color .4s ease;
+}
+.slope[data-cat="c1"] { --slope-bg: #2F8F4E; --slope-ink: #FFFFFF; }
+.slope[data-cat="c2"] { --slope-bg: #F0C21B; --slope-ink: #1A2024; }
+.slope[data-cat="c3"] { --slope-bg: #E8742A; --slope-ink: #1A2024; }
+.slope[data-cat="c4"] { --slope-bg: #C8322B; --slope-ink: #FFFFFF; }
+.slope[data-cat="c5"] { --slope-bg: #2A2430; --slope-ink: #FFFFFF; box-shadow: inset 0 0 0 1px rgba(255,255,255,.22); }
+.slope[data-cat="d1"] { --slope-bg: #3C7CB4; --slope-ink: #FFFFFF; }
+.slope[data-cat="d2"] { --slope-bg: #23508F; --slope-ink: #FFFFFF; }
+.slope-label { font-size: .95rem; font-weight: 600; }
+.slope-value {
+  display: block; font-family: var(--num); font-weight: 700;
+  font-size: min(15vw, 11vh, 5.5rem); line-height: .95;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.slope-src { display: block; margin-top: 4px; font-size: .85rem; line-height: 1.3; opacity: .85; }
+.road { width: 100%; height: auto; max-height: 120px; overflow: visible; }
+.road .ref { stroke: currentColor; stroke-width: 2; stroke-dasharray: 4 6; opacity: .35; }
+.road-g { transform-box: view-box; transform-origin: 120px 70px; transition: transform .35s ease-out; }
+.road-g .tarmac { stroke: currentColor; stroke-width: 9; stroke-linecap: round; }
+.road-g .bike { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Commandes */
+.controls { grid-area: controls; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 10px; }
+.btn {
+  min-height: 62px; padding: 0 14px;
+  border-radius: 16px; border: 1px solid var(--line);
+  background: var(--surface); cursor: pointer;
+  font-size: 1.1rem; font-weight: 600;
+}
+.btn.primary { background: var(--ink); color: var(--on-ink); border-color: var(--ink); font-size: 1.25rem; }
+.btn.confirm { border-color: var(--bad); color: var(--bad); }
+
+/* Réglages */
+dialog {
+  width: min(440px, calc(100% - 24px)); max-height: calc(100% - 24px);
+  border: 1px solid var(--line); border-radius: 20px; padding: 20px;
+  background: var(--surface); color: var(--ink);
+}
+dialog::backdrop { background: rgba(10, 14, 18, .55); }
+dialog h2 { margin: 0 0 16px; font-family: var(--num); font-weight: 700; font-size: 1.9rem; line-height: 1; }
+.set { margin: 0 0 20px; padding: 0; border: 0; }
+.set legend, .set h3 { padding: 0; margin: 0 0 8px; font-size: 1rem; font-weight: 600; }
+.set p { margin: 0 0 10px; font-size: .92rem; line-height: 1.45; color: var(--muted); max-width: 60ch; }
+.seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.seg label { position: relative; text-align: center; padding: 11px 6px; font-size: .92rem; font-weight: 500; cursor: pointer; }
+.seg label + label { border-left: 1px solid var(--line); }
+.seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.seg label:has(input:checked) { background: var(--ink); color: var(--on-ink); }
+.seg label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: -3px; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: .95rem; line-height: 1.4; padding: 6px 0; cursor: pointer; }
+.check input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--ink); flex: none; }
+.calib-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.calib-msg { font-size: .9rem; color: var(--muted); }
+.calib-msg[data-tone="ok"] { color: var(--ok); }
+.calib-msg[data-tone="bad"] { color: var(--bad); }
+.dlg-actions { display: flex; justify-content: flex-end; margin-top: 4px; }
+.btn.small { min-height: 46px; font-size: 1rem; }
+
+/* Écran large ou paysage : deux colonnes */
+@media (min-aspect-ratio: 5/4) {
+  .app {
+    max-width: 1040px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    min-height: 320px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas: "status status" "speed slope" "controls stats";
+    column-gap: 20px;
+  }
+  .speed-value { font-size: min(22vw, 42vh, 15rem); }
+  .dist-value { font-size: min(8vw, 13vh, 5rem); }
+  .slope-value { font-size: min(7vw, 13vh, 5rem); }
+  .slope { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .road-g, .slope { transition: none; }
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="status">
+    <div class="pill" id="gpsPill" data-state="off"><i class="dot" aria-hidden="true"></i><span id="gpsText">GPS inactif</span></div>
+    <button class="icon-btn" id="settingsBtn" type="button" aria-label="Réglages">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3.2"/>
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+      </svg>
+    </button>
+  </header>
+
+  <section class="speed stale" id="speedBox" aria-label="Vitesse">
+    <div class="speed-row">
+      <span class="speed-value" id="speed">0,0</span>
+      <span class="speed-unit">km/h</span>
+    </div>
+    <p class="notice" id="notice">Appuyez sur Démarrer pour lancer le GPS.</p>
+  </section>
+
+  <section class="stats" aria-label="Distance et temps">
+    <div class="dist">
+      <span class="label">Distance</span>
+      <span class="dist-value"><span id="distance">0,00</span><small>km</small></span>
+    </div>
+    <dl class="mini">
+      <div><dt>Temps</dt><dd id="time">0:00:00</dd></div>
+      <div><dt>Moyenne</dt><dd><span id="avg">0,0</span><small>km/h</small></dd></div>
+      <div><dt>Max</dt><dd><span id="max">0,0</span><small>km/h</small></dd></div>
+    </dl>
+  </section>
+
+  <section class="slope" id="slopePanel" data-cat="none" aria-label="Pente">
+    <div>
+      <span class="slope-label" id="slopeLabel">Pente</span>
+      <span class="slope-value" id="slope">—</span>
+      <span class="slope-src" id="slopeSrc">Calibrez le capteur dans les réglages, ou roulez un peu pour l’estimation par GPS.</span>
+    </div>
+    <svg class="road" viewBox="0 0 240 110" aria-hidden="true">
+      <line class="ref" x1="26" y1="70" x2="216" y2="70"/>
+      <g class="road-g" id="roadG">
+        <line class="tarmac" x1="34" y1="74.5" x2="208" y2="74.5"/>
+        <g class="bike" transform="translate(121 72) scale(1.35) translate(-121 -72)">
+          <circle cx="99" cy="54" r="15"/>
+          <circle cx="143" cy="54" r="15"/>
+          <path d="M99 54 L117 54 L111 32 Z M117 54 L137 33 L111 32 M137 33 L143 54 M137 33 L134 26 L140 24 M106 29 L116 29"/>
+        </g>
+      </g>
+    </svg>
+  </section>
+
+  <footer class="controls">
+    <button class="btn primary" id="startBtn" type="button">Démarrer</button>
+    <button class="btn" id="resetBtn" type="button">Remettre à zéro</button>
+  </footer>
+</main>
+
+<dialog id="settings" aria-labelledby="setTitle">
+  <h2 id="setTitle">Réglages</h2>
+
+  <fieldset class="set">
+    <legend>Mesure de la pente</legend>
+    <div class="seg" role="radiogroup">
+      <label><input type="radio" name="src" value="auto">Automatique</label>
+      <label><input type="radio" name="src" value="sensor">Capteur</label>
+      <label><input type="radio" name="src" value="gps">Altitude GPS</label>
+    </div>
+  </fieldset>
+
+  <div class="set">
+    <h3>Calibrer le capteur</h3>
+    <p>Fixez le téléphone sur le guidon, posez le vélo sur un sol bien plat et immobile, puis lancez la calibration. À refaire si vous changez la position du téléphone.</p>
+    <div class="calib-row">
+      <button class="btn small" id="calibBtn" type="button">Calibrer à plat</button>
+      <span class="calib-msg" id="calibMsg">Pas encore calibré</span>
+    </div>
+  </div>
+
+  <div class="set">
+    <label class="check"><input type="checkbox" id="invertChk"><span>Inverser le sens de la pente (si une montée s’affiche en descente)</span></label>
+    <label class="check"><input type="checkbox" id="wakeChk"><span>Garder l’écran allumé pendant la sortie</span></label>
+  </div>
+
+  <div class="dlg-actions"><button class="btn small primary" id="closeSettings" type="button">Fermer</button></div>
+</dialog>
+
+<script data-app>
+(() => {
+  'use strict';
+
+  const $ = id => document.getElementById(id);
+  const el = {
+    gpsPill: $('gpsPill'), gpsText: $('gpsText'), speedBox: $('speedBox'), speed: $('speed'), notice: $('notice'),
+    distance: $('distance'), time: $('time'), avg: $('avg'), max: $('max'),
+    slopePanel: $('slopePanel'), slopeLabel: $('slopeLabel'), slope: $('slope'), slopeSrc: $('slopeSrc'), roadG: $('roadG'),
+    startBtn: $('startBtn'), resetBtn: $('resetBtn'), settingsBtn: $('settingsBtn'), dlg: $('settings'),
+    calibBtn: $('calibBtn'), calibMsg: $('calibMsg'), invertChk: $('invertChk'), wakeChk: $('wakeChk'), closeSettings: $('closeSettings')
+  };
+
+  const STOP = 0.8;            // m/s : en dessous, on considère le vélo à l’arrêt
+  const MAX_ACC = 30;          // m : précision GPS au-delà de laquelle on ignore le point pour la distance
+  const G = 9.81;
+  const fmt1 = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const fmt2 = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const store = {
+    get(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  const S = {
+    running: false,
+    distance: 0, elapsedMs: 0, movingMs: 0, maxSpeed: 0,
+    speed: null, lastSpeedWall: 0,
+    lastFix: null, lastFixWall: 0, accuracy: null,
+    gps: 'off',
+    odo: 0, altTrack: [], gpsSlope: null, gpsSlopeWall: 0,
+    aLong: 0, aWall: 0, vPrev: null,
+    sensor: 'unknown', f: null, lastMotionT: 0, calib: null, sensorSlope: null,
+    prefs: { source: 'auto', invert: false, wake: true }
+  };
+
+  const saved = store.get('velo.session');
+  if (saved) {
+    S.distance = +saved.distance || 0; S.elapsedMs = +saved.elapsedMs || 0;
+    S.movingMs = +saved.movingMs || 0; S.maxSpeed = +saved.maxSpeed || 0;
+  }
+  Object.assign(S.prefs, store.get('velo.prefs') || {});
+  S.calib = store.get('velo.calib');
+
+  function persist() {
+    store.set('velo.session', { distance: S.distance, elapsedMs: S.elapsedMs, movingMs: S.movingMs, maxSpeed: S.maxSpeed });
+  }
+  function savePrefs() { store.set('velo.prefs', S.prefs); }
+
+  // ---------- GPS : vitesse, distance, altitude ----------
+  let watchId = null;
+  function startGps() {
+    if (!('geolocation' in navigator)) { S.gps = 'unsupported'; return; }
+    if (watchId !== null) return;
+    S.gps = 'searching';
+    try {
+      watchId = navigator.geolocation.watchPosition(onPos, onPosErr, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
+    } catch (e) { S.gps = 'denied'; }
+  }
+  function onPosErr(err) {
+    if (err && err.code === 1) {
+      S.gps = 'denied';
+      if (watchId !== null) { try { navigator.geolocation.clearWatch(watchId); } catch (e) {} watchId = null; }
+    } else if (S.gps !== 'ok' && S.gps !== 'weak') {
+      S.gps = 'searching';
+    }
+    render();
+  }
+
+  function haversine(a, b) {
+    const R = 6371008.8, r = Math.PI / 180;
+    const dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r;
+    const s = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+  }
+
+  function setSpeed(v, t) {
+    if (v > 33) return;                       // > 120 km/h : point aberrant
+    S.speed = S.speed == null ? v : S.speed + 0.6 * (v - S.speed);
+    S.lastSpeedWall = Date.now();
+    // accélération longitudinale (sert à corriger le capteur de pente)
+    if (S.vPrev) {
+      const dt = (t - S.vPrev.t) / 1000;
+      if (dt >= 0.3 && dt <= 5) {
+        const a = (S.speed - S.vPrev.v) / dt;
+        S.aLong += 0.5 * (a - S.aLong);
+        S.aWall = Date.now();
+      }
+    }
+    S.vPrev = { v: S.speed, t };
+  }
+
+  function onPos(p) {
+    const c = p.coords, t = p.timestamp || Date.now();
+    S.accuracy = c.accuracy;
+    S.gps = c.accuracy <= MAX_ACC ? 'ok' : 'weak';
+    S.lastFixWall = Date.now();
+    const hasSpeed = typeof c.speed === 'number' && isFinite(c.speed) && c.speed >= 0;
+
+    if (c.accuracy > MAX_ACC) {               // point trop imprécis : vitesse seulement
+      if (hasSpeed) setSpeed(c.speed, t);
+      render(); return;
+    }
+
+    const fix = { lat: c.latitude, lon: c.longitude, t, alt: (typeof c.altitude === 'number' && isFinite(c.altitude)) ? c.altitude : null };
+    const prev = S.lastFix;
+    let d = 0, dt = 0;
+    if (prev) {
+      dt = (t - prev.t) / 1000;
+      if (dt <= 0) return;
+      d = haversine(prev, fix);
+    }
+    if (hasSpeed) setSpeed(c.speed, t);
+    else if (prev && dt > 0) setSpeed(d / dt, t);
+
+    const moving = S.speed != null && S.speed >= STOP;
+    if (prev && moving && d < 40 * dt) {
+      S.odo += d;
+      if (S.running) {
+        S.distance += d;
+        if (S.speed > S.maxSpeed) S.maxSpeed = S.speed;
+      }
+      if (fix.alt !== null && d > 0.5) {
+        S.altTrack.push({ d: S.odo, alt: fix.alt });
+        while (S.altTrack.length && S.altTrack[0].d < S.odo - 160) S.altTrack.shift();
+        updateGpsSlope();
+      }
+    }
+    S.lastFix = fix;
+    render();
+  }
+
+  // pente GPS : régression altitude / distance sur les 80 derniers mètres
+  function updateGpsSlope() {
+    const pts = S.altTrack.filter(p => p.d >= S.odo - 80);
+    if (pts.length < 5 || pts[pts.length - 1].d - pts[0].d < 40) return;
+    let md = 0, ma = 0;
+    for (const p of pts) { md += p.d; ma += p.alt; }
+    md /= pts.length; ma /= pts.length;
+    let num = 0, den = 0;
+    for (const p of pts) { num += (p.d - md) * (p.alt - ma); den += (p.d - md) ** 2; }
+    if (den <= 0) return;
+    S.gpsSlope = Math.max(-35, Math.min(35, (num / den) * 100));
+    S.gpsSlopeWall = Date.now();
+  }
+
+  // ---------- Capteur de mouvement : pente instantanée ----------
+  let motionAttached = false, calibrating = false, calibSamples = [];
+  const needsMotionPerm = !!(window.DeviceMotionEvent && typeof window.DeviceMotionEvent.requestPermission === 'function');
+
+  function attachMotion() {
+    if (!window.DeviceMotionEvent) { S.sensor = 'none'; return; }
+    if (motionAttached) return;
+    window.addEventListener('devicemotion', onMotion);
+    motionAttached = true;
+    setTimeout(() => { if (S.sensor === 'unknown') { S.sensor = 'none'; render(); } }, 3000);
+  }
+  // à appeler directement dans un geste (iPhone)
+  function requestMotion() {
+    if (needsMotionPerm) {
+      return window.DeviceMotionEvent.requestPermission()
+        .then(r => { if (r === 'granted') attachMotion(); else S.sensor = 'none'; render(); })
+        .catch(() => { S.sensor = 'none'; render(); });
+    }
+    attachMotion();
+    return Promise.resolve();
+  }
+
+  const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+  let lastSlopeRender = 0;
+
+  function onMotion(e) {
+    const g = e.accelerationIncludingGravity;
+    if (!g || g.x == null || g.y == null || g.z == null) return;
+    S.sensor = 'ok';
+    const now = performance.now();
+    const v = [g.x, g.y, g.z];
+    if (calibrating) calibSamples.push(v);
+    if (!S.f) { S.f = v.slice(); S.lastMotionT = now; return; }
+    const dt = Math.min(0.2, Math.max(0.001, (now - S.lastMotionT) / 1000));
+    S.lastMotionT = now;
+    const k = dt / (0.6 + dt);                 // filtre passe-bas : gomme les vibrations de la route
+    for (let i = 0; i < 3; i++) S.f[i] += k * (v[i] - S.f[i]);
+
+    const c = S.calib;
+    if (c) {
+      const phi = c.plane === 'yz' ? Math.atan2(S.f[2], S.f[1]) : Math.atan2(S.f[2], S.f[0]);
+      let th = wrap(phi - c.phi0) * c.sign * (S.prefs.invert ? -1 : 1);
+      const aL = (Date.now() - S.aWall < 3000) ? S.aLong : 0;
+      th -= Math.atan(aL / G);                 // retire l’effet des accélérations et freinages
+      const pct = Math.max(-40, Math.min(40, Math.tan(th) * 100));
+      const k2 = dt / (1.0 + dt);
+      S.sensorSlope = S.sensorSlope == null ? pct : S.sensorSlope + k2 * (pct - S.sensorSlope);
+    }
+    if (now - lastSlopeRender > 200) { lastSlopeRender = now; render(); }
+  }
+
+  function screenAngle() {
+    let a = (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle
+      : (typeof window.orientation === 'number' ? window.orientation : 0);
+    return ((a % 360) + 360) % 360;
+  }
+  const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  function setCalibMsg(text, tone) { el.calibMsg.textContent = text; el.calibMsg.dataset.tone = tone || ''; }
+
+  function calibrate() {
+    const p = requestMotion();                 // premier appel, dans le geste
+    el.calibBtn.disabled = true;
+    setCalibMsg('Mesure en cours, ne bougez pas le vélo…');
+    p.then(() => {
+      calibSamples = []; calibrating = true;
+      setTimeout(finishCalib, 2000);
+    });
+  }
+
+  function finishCalib() {
+    calibrating = false; el.calibBtn.disabled = false;
+    const n = calibSamples.length;
+    if (n < 10) { setCalibMsg('Aucune donnée du capteur de mouvement ici. La pente sera estimée par l’altitude GPS.', 'bad'); render(); return; }
+    const m = [0, 0, 0];
+    for (const v of calibSamples) for (let i = 0; i < 3; i++) m[i] += v[i] / n;
+    let ss = 0;
+    for (const v of calibSamples) for (let i = 0; i < 3; i++) ss += (v[i] - m[i]) ** 2;
+    if (Math.sqrt(ss / n) > 0.8) { setCalibMsg('Le téléphone a bougé pendant la mesure. Recommencez, vélo immobile.', 'bad'); return; }
+
+    const ax = Math.abs(m[0]), ay = Math.abs(m[1]), ang = screenAngle();
+    let plane;
+    if (Math.max(ax, ay) < 1.5) plane = (ang === 90 || ang === 270) ? 'xz' : 'yz';
+    else plane = ax < ay ? 'yz' : 'xz';
+    let sign = -1;
+    if (plane === 'xz') {
+      if (ang === 270) sign = 1;
+      else if (ang !== 90) sign = (isIOS() ? m[0] < 0 : m[0] > 0) ? -1 : 1;
+    }
+    const phi0 = plane === 'yz' ? Math.atan2(m[2], m[1]) : Math.atan2(m[2], m[0]);
+    S.calib = { plane, phi0, sign, at: Date.now() };
+    S.f = m.slice(); S.sensorSlope = 0;
+    store.set('velo.calib', S.calib);
+    showCalibState();
+    render();
+  }
+
+  function showCalibState() {
+    if (S.calib && S.calib.at) {
+      const d = new Date(S.calib.at);
+      setCalibMsg('Calibré le ' + d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' +
+        d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }), 'ok');
+    } else if (S.sensor === 'none') {
+      setCalibMsg('Capteur de mouvement non détecté pour l’instant.');
+    } else {
+      setCalibMsg('Pas encore calibré');
+    }
+  }
+
+  function currentSlope() {
+    const src = S.prefs.source;
+    const sensorReady = S.sensor === 'ok' && S.calib && S.sensorSlope != null;
+    const gpsReady = S.gpsSlope != null && Date.now() - S.gpsSlopeWall < 30000;
+    const sensorHint = S.sensor === 'none' ? 'Capteur de mouvement indisponible ici. Choisissez l’altitude GPS dans les réglages.'
+      : 'Calibrez le capteur à plat dans les réglages.';
+    const gpsHint = 'Roulez quelques dizaines de mètres pour l’estimation par l’altitude GPS.';
+    if (src === 'sensor') return sensorReady ? { v: S.sensorSlope, src: 'Capteur du téléphone' } : { v: null, hint: sensorHint };
+    if (src === 'gps') return gpsReady ? { v: S.gpsSlope, src: 'Altitude GPS (moyenne sur 80 m)' } : { v: null, hint: gpsHint };
+    if (sensorReady) return { v: S.sensorSlope, src: 'Capteur du téléphone' };
+    if (gpsReady) return { v: S.gpsSlope, src: 'Altitude GPS (moyenne sur 80 m)' };
+    return { v: null, hint: S.sensor === 'none' ? gpsHint : 'Calibrez le capteur dans les réglages, ou roulez un peu pour l’estimation par GPS.' };
+  }
+
+  function category(p) {
+    if (p == null) return 'none';
+    if (p >= 13) return 'c5';
+    if (p >= 10) return 'c4';
+    if (p >= 7) return 'c3';
+    if (p >= 4) return 'c2';
+    if (p >= 1) return 'c1';
+    if (p > -1) return 'flat';
+    if (p > -5) return 'd1';
+    return 'd2';
+  }
+
+  // ---------- Écran toujours allumé ----------
+  let wakeLock = null;
+  async function requestWake() {
+    if (!S.prefs.wake || wakeLock || !('wakeLock' in navigator)) return;
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } catch (e) { wakeLock = null; }
+  }
+  function releaseWake() { try { if (wakeLock) wakeLock.release(); } catch (e) {} wakeLock = null; }
+
+  // ---------- Affichage ----------
+  function fmtTime(ms) {
+    const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    return h + ':' + String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+  }
+  function fmtSlope(p) {
+    const r = Math.round(p * 10) / 10;
+    const sign = r > 0 ? '+' : r < 0 ? '−' : '';
+    return sign + fmt1.format(Math.abs(r)) + '\u202F%';
+  }
+
+  let noticeKey = '';
+  function setNotice(key, text, tone) {
+    if (key === noticeKey) return;
+    noticeKey = key;
+    el.notice.hidden = !text;
+    el.notice.dataset.tone = tone || '';
+    el.notice.textContent = text || '';
+  }
+
+  function render() {
+    const fresh = S.speed != null && Date.now() - S.lastSpeedWall < 6000;
+    const kmh = fresh && S.speed >= STOP ? S.speed * 3.6 : 0;
+    el.speed.textContent = fmt1.format(kmh);
+    el.speedBox.classList.toggle('stale', !fresh);
+
+    el.distance.textContent = fmt2.format(S.distance / 1000);
+    el.time.textContent = fmtTime(S.elapsedMs);
+    el.avg.textContent = fmt1.format(S.movingMs > 3000 ? (S.distance / (S.movingMs / 1000)) * 3.6 : 0);
+    el.max.textContent = fmt1.format(S.maxSpeed * 3.6);
+
+    const texts = {
+      off: 'GPS inactif', searching: 'Recherche du GPS…', denied: 'Localisation refusée', unsupported: 'GPS indisponible',
+      ok: 'GPS ±' + Math.round(S.accuracy || 0) + ' m', weak: 'Signal GPS faible ±' + Math.round(S.accuracy || 0) + ' m'
+    };
+    el.gpsPill.dataset.state = S.gps;
+    el.gpsText.textContent = texts[S.gps];
+
+    if (S.gps === 'denied') {
+      setNotice('denied', 'La localisation est refusée. Autorisez-la dans les paramètres Android de l’appli (Autorisations, Position), puis appuyez de nouveau sur Démarrer.', 'bad');
+    } else if (S.gps === 'unsupported') {
+      setNotice('unsupported', 'Cet appareil ne donne pas accès au GPS.', 'bad');
+    } else if (S.gps === 'off') {
+      setNotice('off' + (S.elapsedMs > 0), S.elapsedMs > 0 ? 'Sortie en pause. Appuyez sur Reprendre pour relancer le GPS.' : 'Appuyez sur Démarrer pour lancer le GPS.', '');
+    } else if (S.gps === 'searching' && !fresh) {
+      setNotice('searching', 'Recherche du signal… Restez à découvert, la première position peut prendre une minute.', '');
+    } else {
+      setNotice('', '', '');
+    }
+
+    el.startBtn.textContent = S.running ? 'Pause' : (S.elapsedMs > 0 ? 'Reprendre' : 'Démarrer');
+
+    const sl = currentSlope();
+    el.slopePanel.dataset.cat = category(sl.v);
+    if (sl.v == null) {
+      el.slopeLabel.textContent = 'Pente';
+      el.slope.textContent = '—';
+      el.slopeSrc.textContent = sl.hint;
+      el.roadG.style.transform = 'rotate(0deg)';
+    } else {
+      el.slopeLabel.textContent = sl.v >= 1 ? 'Montée' : sl.v <= -1 ? 'Descente' : 'Plat';
+      el.slope.textContent = fmtSlope(sl.v);
+      el.slopeSrc.textContent = sl.src;
+      // inclinaison du dessin exagérée ×2,5 pour être lisible d’un coup d’œil
+      const deg = Math.max(-40, Math.min(40, Math.atan(sl.v / 100) * 180 / Math.PI * 2.5));
+      el.roadG.style.transform = 'rotate(' + (-deg).toFixed(1) + 'deg)';
+    }
+  }
+
+  // ---------- Chrono ----------
+  let lastTick = performance.now(), tickCount = 0;
+  setInterval(() => {
+    const now = performance.now(), dt = now - lastTick;
+    lastTick = now;
+    if ((S.gps === 'ok' || S.gps === 'weak') && Date.now() - S.lastFixWall > 10000) S.gps = 'searching';
+    if (S.running) {
+      S.elapsedMs += dt;
+      const fresh = S.speed != null && Date.now() - S.lastSpeedWall < 6000;
+      if (fresh && S.speed >= STOP) S.movingMs += dt;
+      if (++tickCount % 10 === 0) persist();
+    }
+    render();
+  }, 500);
+
+  // ---------- Commandes ----------
+  el.startBtn.addEventListener('click', () => {
+    if (needsMotionPerm && S.sensor !== 'ok') requestMotion();
+    if (!S.running) {
+      startGps();
+      S.running = true;
+      requestWake();
+    } else {
+      S.running = false;
+      persist();
+      releaseWake();
+    }
+    render();
+  });
+
+  let resetTimer = null;
+  el.resetBtn.addEventListener('click', () => {
+    if (!resetTimer) {
+      el.resetBtn.textContent = 'Confirmer';
+      el.resetBtn.classList.add('confirm');
+      resetTimer = setTimeout(() => {
+        resetTimer = null;
+        el.resetBtn.textContent = 'Remettre à zéro';
+        el.resetBtn.classList.remove('confirm');
+      }, 3000);
+      return;
+    }
+    clearTimeout(resetTimer); resetTimer = null;
+    el.resetBtn.textContent = 'Remettre à zéro';
+    el.resetBtn.classList.remove('confirm');
+    S.distance = 0; S.elapsedMs = 0; S.movingMs = 0; S.maxSpeed = 0;
+    persist(); render();
+  });
+
+  function syncSettings() {
+    el.dlg.querySelectorAll('input[name="src"]').forEach(r => { r.checked = r.value === S.prefs.source; });
+    el.invertChk.checked = !!S.prefs.invert;
+    el.wakeChk.checked = !!S.prefs.wake;
+    if (!calibrating) showCalibState();
+  }
+  el.settingsBtn.addEventListener('click', () => {
+    syncSettings();
+    if (typeof el.dlg.showModal === 'function') el.dlg.showModal(); else el.dlg.setAttribute('open', '');
+  });
+  const closeDlg = () => { if (typeof el.dlg.close === 'function') el.dlg.close(); else el.dlg.removeAttribute('open'); };
+  el.closeSettings.addEventListener('click', closeDlg);
+  el.dlg.addEventListener('click', e => { if (e.target === el.dlg) closeDlg(); });
+  el.dlg.querySelectorAll('input[name="src"]').forEach(r => r.addEventListener('change', () => {
+    S.prefs.source = r.value; savePrefs(); render();
+  }));
+  el.invertChk.addEventListener('change', () => { S.prefs.invert = el.invertChk.checked; S.sensorSlope = null; savePrefs(); render(); });
+  el.wakeChk.addEventListener('change', () => {
+    S.prefs.wake = el.wakeChk.checked; savePrefs();
+    if (!S.prefs.wake) releaseWake(); else if (S.running) requestWake();
+  });
+  el.calibBtn.addEventListener('click', calibrate);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') persist();
+    else if (S.running) requestWake();
+  });
+  window.addEventListener('pagehide', persist);
+
+  if (!needsMotionPerm) attachMotion();
+  render();
+
+  // Mode hors ligne
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+  }
+})();
+</script>
+</body>
+</html>
